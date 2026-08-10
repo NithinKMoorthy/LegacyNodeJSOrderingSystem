@@ -1,0 +1,8 @@
+require('dotenv').config();
+var app = require('./app');
+
+var PORT = process.env.PORT || 3000;
+
+app.listen(PORT, function () {
+  console.log('legacy-orders listening on port ' + PORT);
+});
