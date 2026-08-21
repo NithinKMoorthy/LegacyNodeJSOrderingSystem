@@ -35,7 +35,7 @@ AWS SDK (S3 and SNS).
 
 ## Requirements
 
-- Node.js 16
+- Node.js 22
 - PostgreSQL 12+
 - Docker / Docker Compose (optional, for local runs)
 

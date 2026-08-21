@@ -14,7 +14,7 @@ function authenticate(req, res, next) {
   }
   var token = header.split(' ')[1] || header;
   try {
-    var decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256', 'none'] });
+    var decoded = jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] });
     req.user = decoded;
   } catch (e) {
     console.log('token verify failed: ' + e.message);
