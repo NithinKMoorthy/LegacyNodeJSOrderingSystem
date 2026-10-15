@@ -1,10 +1,9 @@
-var AWS = require('aws-sdk');
+var { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+var { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
 var config = require('./config');
 
-AWS.config.update({ region: config.awsRegion });
-
-var s3 = new AWS.S3();
-var sns = new AWS.SNS();
+var s3Client = new S3Client({ region: config.awsRegion });
+var snsClient = new SNSClient({ region: config.awsRegion });
 
 // uploads a JSON export of an order to S3
 function exportOrder(order, cb) {
@@ -15,14 +14,13 @@ function exportOrder(order, cb) {
     Body: JSON.stringify(order),
     ContentType: 'application/json'
   };
-  s3.putObject(params, function (err, data) {
-    if (err) {
-      console.error('failed to export order to s3', err);
-      if (cb) cb(err);
-      return;
-    }
+  var command = new PutObjectCommand(params);
+  s3Client.send(command).then(function (data) {
     console.log('exported order ' + order.id + ' to s3://' + config.exportBucket + '/' + key);
     if (cb) cb(null, data);
+  }).catch(function (err) {
+    console.error('failed to export order to s3', err);
+    if (cb) cb(err);
   });
 }
 
@@ -36,18 +34,17 @@ function notifyOrder(order) {
     Subject: 'Order ' + order.id + ' ' + order.status,
     Message: JSON.stringify({ orderId: order.id, status: order.status, total: order.total })
   };
-  sns.publish(params, function (err) {
-    if (err) {
-      console.error('failed to publish order notification', err);
-    } else {
-      console.log('published notification for order ' + order.id);
-    }
+  var command = new PublishCommand(params);
+  snsClient.send(command).then(function () {
+    console.log('published notification for order ' + order.id);
+  }).catch(function (err) {
+    console.error('failed to publish order notification', err);
   });
 }
 
 module.exports = {
-  s3: s3,
-  sns: sns,
+  s3: s3Client,
+  sns: snsClient,
   exportOrder: exportOrder,
   notifyOrder: notifyOrder
 };
